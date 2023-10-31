@@ -10,5 +10,11 @@
   },
   "scripts": {
     "test": "cucumber-js --profile default"
+  },
+  "bin": {
+    "user-cli": "./user-cli.js"
+  },
+  "dependencies": {
+    "commander": "^11.1.0"
   }
 }
