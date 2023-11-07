@@ -1,6 +1,6 @@
 import { findUserByIdRepository } from '../../Infra/UserRepository';
 import { findFleetById } from '../../Infra/FleetRepository'; 
-import { IUser } from '../../Domain/User/IUser';
+import { IUser } from '../../Domain/Entity/User/IUser';
 
 function addFleetToUserService(userId: number, fleetId: number): IUser | undefined {
   const user = findUserByIdRepository(userId);

@@ -1,11 +1,11 @@
 // for this exercise I decided to register my users here because it's usually repositories that manipulate the flush of data in a database
-import { IUser } from '../Domain/User/IUser'
+import { IUser } from '../Domain/Entity/User/IUser'
 
-const users: IUser[] = [];
+let users: IUser[] = [];
 
-function saveUser(user: IUser): IUser[] {
+function saveUser(user: IUser): IUser {
   users.push(user);
-  return users;
+  return user;
 }
 
 function findUserByIdRepository(userId: number): IUser | undefined {
@@ -21,4 +21,8 @@ const updateUser = (userId: number, newUser: IUser): IUser | undefined => {
   return undefined;
 }
 
-export { saveUser, findUserByIdRepository, updateUser };
+const  deleteAllUsers = (): void => {
+  users = []
+}
+
+export { saveUser, findUserByIdRepository, updateUser, deleteAllUsers };

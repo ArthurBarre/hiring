@@ -1,5 +1,5 @@
 import { IUser } from './IUser';
-import { IFleet } from '../Fleet/IFleet';
+import { IFleet } from '../../Fleet/IFleet';
 
 class User implements IUser{
   id: number;

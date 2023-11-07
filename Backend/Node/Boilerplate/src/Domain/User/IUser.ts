@@ -1,4 +1,4 @@
-import { IFleet } from '../Fleet/IFleet';
+import { IFleet } from '../../Fleet/IFleet';
 
 export interface IUser {
   id: number;

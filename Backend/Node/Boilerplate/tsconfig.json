@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "ES6", // ou une autre version d'ECMAScript que vous ciblez
+    "outDir": "./dist", // Répertoire de sortie des fichiers JS compilés
+    "rootDir": "./src", // Répertoire source de vos fichiers TypeScript
+    "module": "CommonJS", // Ou un autre module que vous utilisez
+    "strict": true // Active les vérifications de type strictes
+  },
+  "include": [
+    "src/**/*.ts" // Inclure les fichiers TypeScript dans le répertoire src
+  ]
+}

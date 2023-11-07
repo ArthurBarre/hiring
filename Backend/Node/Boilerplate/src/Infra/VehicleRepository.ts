@@ -1,9 +1,9 @@
 // for this exercise I decided to register my vehicle here because it's usually repositories that manipulate the flush of data in a database
-import { IVehicle } from '../Domain/Vehicle/IVehicle';
+import { IVehicle } from '../Domain/Entity/Vehicle/IVehicle';
 
-const vehicles: IVehicle[] = [];
+let vehicles: IVehicle[] = [];
 
-function saveVehicle(vehicle: IVehicle): IVehicle[] {
+function saveVehicle(vehicle: IVehicle): IVehicle {
   // Check if the vehicle with the same ID already exists
   if (vehicles.some((v) => v.id === vehicle.id)) {
     throw new Error(`Vehicle with ID ${vehicle.id} already exists.`);
@@ -12,7 +12,7 @@ function saveVehicle(vehicle: IVehicle): IVehicle[] {
   // If the ID doesn't exist, add the vehicle to the repository
   vehicles.push(vehicle);
 
-  return vehicles;
+  return vehicle;
 }
 
 function findVehicleById(vehicleId: number): IVehicle | undefined {
@@ -28,4 +28,8 @@ const updateVehicle = (vehicleId: number, newVehicle: IVehicle): IVehicle | unde
   return undefined;
 }
 
-export { saveVehicle, findVehicleById, updateVehicle };
+const deleteAllVehicles = () : void  => {
+  vehicles = []
+}
+
+export { saveVehicle, findVehicleById, updateVehicle, deleteAllVehicles};

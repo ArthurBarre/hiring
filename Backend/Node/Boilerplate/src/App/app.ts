@@ -1,17 +1,17 @@
 // Entities
-import User  from '../Domain/User/User'; // Import the User entity
-import Fleet  from '../Domain/Fleet/Fleet'; // Import the Fleet entity
-import Vehicle  from '../Domain/Vehicle/Vehicle'; // Import the Vehicle entity
+import User  from '../Domain/Entity/User/User'; // Import the User entity
+import Fleet  from '../Domain/Entity/Fleet/Fleet'; // Import the Fleet entity
+import Vehicle  from '../Domain/Entity/Vehicle/Vehicle'; // Import the Vehicle entity
 
 //types
-import { IUser } from '../Domain/User/IUser'; // Import the User entity
-import { IFleet } from '../Domain/Fleet/IFleet'; // Import the Fleet entity
-import { IVehicle } from '../Domain/Vehicle/IVehicle'; // Import the Vehicle entity
+import { IUser } from '../Domain/Entity/User/IUser'; // Import the User entity
+import { IFleet } from '../Domain/Entity/Fleet/IFleet'; // Import the Fleet entity
+import { IVehicle } from '../Domain/Entity/Vehicle/IVehicle'; // Import the Vehicle entity
 
 // Repositories
-import { saveUser, updateUser, findUserByIdRepository } from '../Infra/UserRepository'; // Import the UserRepository
-import { updateFleet, saveFleets } from '../Infra/FleetRepository'; // Import the FleetRepository
-import { saveVehicle, updateVehicle } from '../Infra/VehicleRepository'; // Import the VehicleRepository
+import { saveUser, updateUser, findUserByIdRepository, deleteAllUsers } from '../Infra/UserRepository'; // Import the UserRepository
+import { updateFleet, saveFleets, deleteAllFleets} from '../Infra/FleetRepository'; // Import the FleetRepository
+import { saveVehicle, updateVehicle, deleteAllVehicles } from '../Infra/VehicleRepository'; // Import the VehicleRepository
 
 // Services
 import  { addFleetToUserService }  from './services/UserService'; // Import the UserService
@@ -19,13 +19,13 @@ import { registerVehicleToFleet } from './services/FleetService'; // Import the 
 import { updateLocation} from './services/VehicleService'; // Import the VehicleService
 
 // Create a User
-const createUser = (id: number, firstName: string, lastName: string, email: string, password: string): IUser[] | undefined=> {
+const createUser = (id: number, firstName: string, lastName: string, email: string, password: string): IUser | undefined=> {
   const user = new User(id, firstName, lastName, email, password);
   return saveUser(user);
 }
 
 // Create a Fleet
-const createFleet = (id: number, title: string): IFleet[] => {
+const createFleet = (id: number, title: string): IFleet => {
   const fleet = new Fleet(id, title);
   return saveFleets(fleet); // Assuming you have a saveFleet method in FleetRepository
 }
@@ -36,20 +36,22 @@ const addFleetToUser = (userId: number, fleetId: number): IUser | undefined=> {
   if (userWithNewFleet) {
     return updateUser(userId, userWithNewFleet);
   }
+  return userWithNewFleet;
 }
 
 // Create a Vehicle
-const createVehicle = (id: number, numberPlate: string, location: {lat: number, lng: number}): IVehicle[] | undefined => {
+const createVehicle = (id: number, numberPlate: string, location: {lat: number, lng: number}): IVehicle | undefined => {
   const vehicle = new Vehicle(id, numberPlate, location);
 
   if(vehicle) {
     return saveVehicle(vehicle);
   }
+  return vehicle;
 }
 
 // Add Vehicle to Fleet
 const addVehicleToFleet = (fleetId: number, vehicleId: number): IFleet | undefined=> {
-  const fleetWithNewVehicle = registerVehicleToFleet(fleetId, vehicleId);
+  const fleetWithNewVehicle = registerVehicleToFleet(vehicleId, fleetId);
 
   if (fleetWithNewVehicle === undefined) {
     return undefined; // Return undefined if vehicleLocationUpdated is undefined
@@ -73,6 +75,17 @@ const updateVehicleLocation = (vehicleId: number, location: { lat: number; lng: 
   return updateVehicle(vehicleId, vehicleLocationUpdated);
 }
 
+const resetUsers = (): void => {
+  deleteAllUsers();
+}
+
+const resetFleets = (): void => {
+  deleteAllFleets();
+}
+
+const resetVehicles = (): void => {
+  deleteAllVehicles();
+}
 export {
   createUser,
   createFleet,
@@ -80,5 +93,8 @@ export {
   createVehicle,
   addVehicleToFleet,
   findUserById,
-  updateVehicleLocation
+  updateVehicleLocation,
+  resetUsers,
+  resetFleets,
+  resetVehicles
 };

@@ -1,13 +1,13 @@
 // for this exercise I decided to register my fleets here because it's usually repositories that manipulate the flush of data in a database
-import { IVehicle } from '../Domain/Vehicle/IVehicle';
+import { IVehicle } from '../Domain/Entity/Vehicle/IVehicle';
 import { IFleet } from '../Domain/Fleet/IFleet';
 
 
-const fleets: IFleet[] = [];
+let fleets: IFleet[] = [];
 
-function saveFleets(fleet: IFleet): IFleet[] {
+function saveFleets(fleet: IFleet): IFleet {
   fleets.push(fleet);
-  return fleets;
+  return fleet;
 }
 
 function findFleetById(fleetId: number): IFleet | undefined {
@@ -23,4 +23,8 @@ const updateFleet = (fleetId: number, newFleet: IFleet): IFleet | undefined => {
   return undefined;
 }
 
-export { saveFleets, findFleetById, updateFleet };
+const deleteAllFleets = () : void => {
+  fleets = []
+}
+
+export { saveFleets, findFleetById, updateFleet, deleteAllFleets };
