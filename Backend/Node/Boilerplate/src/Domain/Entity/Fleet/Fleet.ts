@@ -1,13 +1,12 @@
-import IFleet from './IFleet';
+import {IFleet} from './IFleet';
 import { IVehicle } from '../Vehicle/IVehicle';
 
 class Fleet implements IFleet {
-  id: number;
   title: string;
   vehicles: IVehicle[];
 
-  constructor(id: number, title: string) {
-    this.id = id;
+  constructor(title: string) {
+
     this.title = title;
     this.vehicles = [];
   }

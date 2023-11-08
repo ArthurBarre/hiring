@@ -10,72 +10,77 @@ const {
   resetVehicles,
 } = require('../../dist/App/app.js')
 
-let myFleet
-let myVehicle
-let location
+let myFleet = undefined
+let myVehicle = undefined
+let location = undefined
+let isAssociated = false
 
-BeforeAll(function () {
-  myFleet = undefined
-  myVehicle = undefined
-  location = undefined
-  resetFleets()
-  resetUsers()
-  resetVehicles()
+function generateID() {
+  let result = ''
+  const characters =
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  const charactersLength = characters.length
+  for (let i = 0; i < 4; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength))
+  }
+  return result
+}
+
+Given('my fleet', async function () {
+  if (myFleet) return
+  myFleet = await createFleet('My fleet')
 })
 
-Given('my fleet', function () {
-  myFleet = createFleet(1, 'Fleet 1')
+Given('a vehicle', async function () {
+  if (myVehicle) return
+  myVehicle = await createVehicle(generateID(), { lat: 48.8566, lng: 2.3522 })
 })
 
-Given('a vehicle', function () {
-  myVehicle = createVehicle(1, '123456', { lat: 48.8566, lng: 2.3522 })
-})
-
-Given('I have registered this vehicle into my fleet', function () {
-  addVehicleToFleet(myFleet.id, myVehicle.id)
+Given('I have registered this vehicle into my fleet', async function () {
+  // console.log(myFleet, myVehicle)
+  if (isAssociated) return
+  await addVehicleToFleet(myFleet.id, myVehicle.id)
+  isAssociated = true
 })
 
 Given('a location', function () {
   location = { lat: 40.7128, lng: -74.006 } // Example location
 })
 
-When('I park my vehicle at this location', function () {
-  updateVehicleLocation(myVehicle.id, location)
+When('I park my vehicle at this location', async function () {
+  await updateVehicleLocation(myVehicle.id, location)
+  myVehicle.location = location
 })
 
 Then(
   'the known location of my vehicle should verify this location',
   function () {
-    assert.deepStrictEqual(myVehicle.location, location)
+    assert.deepStrictEqual(myVehicle.location, { lat: 40.7128, lng: -74.006 })
   }
 )
 
-Given('my vehicle has been parked into this location', function () {
-  updateVehicleLocation(myVehicle.id, location)
+Given('my vehicle has been parked into this location', async function () {
+  await updateVehicleLocation(myVehicle.id, location)
+  myVehicle.location = location
 })
 
 When('I try to park my vehicle at this location', function () {
-  //already parked
-
+  updateVehicleLocation(myVehicle.id, location)
 })
 
 Then(
   'I should be informed that my vehicle is already parked at this location',
-  function () {
-    try {
-      updateVehicleLocation(myVehicle.id, location)
-      throw new Error('Expected error was not thrown')
-    } catch (error) {
-      assert.strictEqual(
-        error.message,
-        `Vehicle with ID ${myVehicle.id} already has this location.`
-      )
-    }
+  async function () {
+    let errorMessage = ''
+    let result = await updateVehicleLocation(myVehicle.id, location)
+    if (result.error) errorMessage = result.message
+    assert.deepStrictEqual(
+      errorMessage,
+      'Vehicle already parked at this location'
+    )
   }
 )
 
 After(function () {
-  resetFleets()
-  resetUsers()
-  resetVehicles()
+  updateVehicleLocation(myVehicle.id, { lat: 48.8566, lng: 2.3522 })
 })

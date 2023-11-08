@@ -3,7 +3,21 @@ const { program } = require('commander')
 const app = require('./dist/App/app.js')
 
 program
-  .command('create <userId>')
+  .command('create-user <id> <firstName> <firstName> <email> <password>')
+  .description('Create a fleet for the user and return the fleetId')
+  .action(async (id, firstName, lastName, email, password) => {
+    const result = await app.createUser(
+      id,
+      firstName,
+      lastName,
+      email,
+      password
+    )
+    console.log(`User ${result.id} created`)
+  })
+
+program
+  .command('create-fleet <userId>')
   .description('Create a fleet for the user and return the fleetId')
   .action((userId) => {
     const fleet = app.createFleet(userId, 'Fleet ' + userId)

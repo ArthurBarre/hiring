@@ -1,90 +1,106 @@
-// const { Given, When, Then, AfterAll } = require('cucumber')
-// const assert = require('assert')
-// const { expect } = require('chai')
-// const {
-//   createUser,
-//   createFleet,
-//   createVehicle,
-//   addVehicleToFleet,
-//   addFleetToUser,
-//   resetUsers,
-//   resetFleets,
-//   resetVehicles,
-// } = require('../../dist/App/app.js')
+const { Given, When, Then, AfterAll } = require('cucumber')
+const assert = require('assert')
 
-// let myFleet
-// let myVehicle
-// let otherUserFleet
+const {
+  createUser,
+  createFleet,
+  createVehicle,
+  addVehicleToFleet,
+  addFleetToUser,
+  doesVehicleBelongToFleet,
+} = require('../../dist/App/app.js')
 
-// Given('my fleet', function () {
-//   myFleet = createFleet(1, 'Fleet 1')
-// })
+let myFleet = undefined
+let myVehicle = undefined
+let otherUserFleet = undefined
+let isAssociated = false
 
-// Given('a vehicle', function () {
-//   if (!myVehicle) {
-//     myVehicle = createVehicle(1, '123456', { lat: 48.8566, lng: 2.3522 })
-//   }
-// })
+function generateID() {
+  let result = ''
+  const characters =
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  const charactersLength = characters.length
+  for (let i = 0; i < 4; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength))
+  }
+  return result
+}
 
-// When('I register this vehicle into my fleet', function () {
-//   let firstRegister = addVehicleToFleet(myFleet.id, myVehicle.id)
-//   assert.strictEqual(typeof firstRegister, 'object')
-// })
+Given('my fleet', async function () {
+  if (myFleet) return
+  myFleet = await createFleet('Fleet 1')
+})
 
-// Given('I have registered this vehicle into my fleet', function () {
-//   //already do
-// })
+Given('a vehicle', async function () {
+  if (!myVehicle) {
+    myVehicle = await createVehicle(generateID(), { lat: 48.8566, lng: 2.3522 })
+  }
+})
 
-// Given('the fleet of another user', function () {
-//   otherUserFleet = createFleet(2, 'Fleet 2')
-//   let otherUser = createUser(2, 'John2', 'Doe2', 'asa2@fdsf.com', '1223456')
-//   addFleetToUser(otherUser.id, otherUserFleet.id)
-// })
+When('I register this vehicle into my fleet', async function () {
+  if (isAssociated) return
+  await addVehicleToFleet(myFleet.id, myVehicle.id)
+  isAssociated = true
+})
 
-// Given(
-//   "this vehicle has been registered into the other user's fleet",
-//   function () {
-//     // console.log(otherUserFleet)
-//     let test = addVehicleToFleet(otherUserFleet.id, myVehicle.id)
-//     assert.strictEqual(typeof test, 'object')
-//   }
-// )
+Given('I have registered this vehicle into my fleet', async function () {
+  // Attempt to associate the vehicle to the fleet only if it has not been done yet
+  if (!isAssociated) {
+    const result = await addVehicleToFleet(myFleet.id, myVehicle.id)
+    // Ensure no error was returned during the association
+    assert.strictEqual(result.error, false)
+    isAssociated = true
+  }
+})
 
-// When('I try to register the same vehicle into my fleet', function () {
-//   try {
-//     addVehicleToFleet(myFleet.id, myVehicle.id)
-//     throw new Error('Expected error was not thrown')
-//   } catch (error) {
-//     assert.strictEqual(
-//       error.message,
-//       `Vehicle with ID ${myVehicle.id} already exists.`
-//     )
-//   }
-// })
+Given('the fleet of another user', async function () {
+  otherUserFleet = await createFleet('Fleet 2')
+  let otherUser = await createUser(
+    'John2',
+    'Doe2',
+    generateID() + '@f.f',
+    '1223456'
+  )
+  await addFleetToUser(otherUser.id, otherUserFleet.id)
+})
 
-// When('I register the vehicle into my new fleet', function () {
-//   //already done
-// })
+Given(
+  "this vehicle has been registered into the other user's fleet",
+  async function () {
+    const result = await addVehicleToFleet(otherUserFleet.id, myVehicle.id)
+    assert.strictEqual(result.error, false)
+    assert.strictEqual(
+      result.message,
+      `Vehicle associated with fleet successfully.`
+    )
+  }
+)
 
-// Then(
-//   'I should be informed this this vehicle has already been registered into my fleet',
-//   function () {
-//     assert.deepStrictEqual(this.duplicateRegistrationResult, undefined)
-//   }
-// )
+When('I try to register the same vehicle into my fleet', async function () {
+  // Attempt to associate the vehicle again and expect an error this time
+  this.result = await addVehicleToFleet(myFleet.id, myVehicle.id)
+})
 
-// Then('this vehicle should be part of my vehicle fleet', function () {
+When('I register the vehicle into my new fleet', function () {
+  //already done
+})
 
-//   let vehicleIsInFleet = otherUserFleet.vehicles.includes(myVehicle)
-//   console.log(vehicleIsInFleet)
-//   assert.strictEqual(vehicleIsInFleet, true)
-// })
+Then(
+  'I should be informed that this vehicle has already been registered into my fleet',
+  function () {
+    // Check that an error was indeed returned as expected
+    assert.strictEqual(this.result.error, true)
+    assert.strictEqual(
+      this.result.message,
+      `Vehicle with ID ${myVehicle.id} is already associated with fleet ID ${myFleet.id}.`
+    )
+  }
+)
 
-// AfterAll(function () {
-//   myFleet = undefined
-//   myVehicle = undefined
-//   otherUserFleet = undefined
-//   resetUsers()
-//   resetFleets()
-//   resetVehicles()
-// })
+Then('this vehicle should be part of my vehicle fleet', async function () {
+  let vehicleIsInFleet = await doesVehicleBelongToFleet(
+    myFleet.id,
+    myVehicle.id
+  )
+  assert.strictEqual(vehicleIsInFleet, true)
+})

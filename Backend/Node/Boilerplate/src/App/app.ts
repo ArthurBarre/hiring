@@ -9,70 +9,70 @@ import { IFleet } from '../Domain/Entity/Fleet/IFleet'; // Import the Fleet enti
 import { IVehicle } from '../Domain/Entity/Vehicle/IVehicle'; // Import the Vehicle entity
 
 // Repositories
-import { saveUser, updateUser, findUserByIdRepository, deleteAllUsers } from '../Infra/UserRepository'; // Import the UserRepository
-import { updateFleet, saveFleets, deleteAllFleets} from '../Infra/FleetRepository'; // Import the FleetRepository
-import { saveVehicle, updateVehicle, deleteAllVehicles } from '../Infra/VehicleRepository'; // Import the VehicleRepository
-
-// Services
-import  { addFleetToUserService }  from './services/UserService'; // Import the UserService
-import { registerVehicleToFleet } from './services/FleetService'; // Import the FleetService
-import { updateLocation} from './services/VehicleService'; // Import the VehicleService
+import { saveUser, 
+  // updateUser, 
+  findUserByIdRepository, 
+  deleteAllUsers 
+} from '../Infra/UserRepository'; 
+import { 
+  saveFleet,
+  deleteAllFleets,
+  associateFleetToUser,
+  doesVehicleBelongToFleetRepository
+} from '../Infra/FleetRepository'; 
+import { saveVehicle, associateVehicleToFleet, deleteAllVehicles, updateVehicleLocationRepository } from '../Infra/VehicleRepository'; // Import the VehicleRepository
 
 // Create a User
-const createUser = (id: number, firstName: string, lastName: string, email: string, password: string): IUser | undefined=> {
-  const user = new User(id, firstName, lastName, email, password);
-  return saveUser(user);
+const createUser = async (firstName: string, lastName: string, email: string, password: string): Promise<IUser | undefined> => {
+  const user = new User(firstName, lastName, email, password);
+  if(user){
+    return await saveUser(user);
+  }
 }
 
 // Create a Fleet
-const createFleet = (id: number, title: string): IFleet => {
-  const fleet = new Fleet(id, title);
-  return saveFleets(fleet); // Assuming you have a saveFleet method in FleetRepository
+const createFleet = async (title: string):  Promise<IFleet | undefined> => {
+  const fleet = new Fleet(title);
+  if(fleet) {
+    return await saveFleet(fleet); // Assuming you have a saveFleet method in FleetRepository
+  }
 }
 
 // Add Fleet to User
-const addFleetToUser = (userId: number, fleetId: number): IUser | undefined=> {
-  const userWithNewFleet = addFleetToUserService(userId, fleetId);
-  if (userWithNewFleet) {
-    return updateUser(userId, userWithNewFleet);
-  }
+const addFleetToUser = (userId: number, fleetId: number): Promise<void> => {
+  const userWithNewFleet = associateFleetToUser(userId, fleetId);
   return userWithNewFleet;
 }
 
 // Create a Vehicle
-const createVehicle = (id: number, numberPlate: string, location: {lat: number, lng: number}): IVehicle | undefined => {
-  const vehicle = new Vehicle(id, numberPlate, location);
+const createVehicle = async (numberPlate: string, location: {lat: number, lng: number}): Promise<IVehicle | undefined> => {
+  const vehicle = new Vehicle(numberPlate, location);
 
   if(vehicle) {
-    return saveVehicle(vehicle);
+    return await saveVehicle(vehicle);
   }
-  return vehicle;
 }
 
 // Add Vehicle to Fleet
-const addVehicleToFleet = (fleetId: number, vehicleId: number): IFleet | undefined=> {
-  const fleetWithNewVehicle = registerVehicleToFleet(vehicleId, fleetId);
-
-  if (fleetWithNewVehicle === undefined) {
-    return undefined; // Return undefined if vehicleLocationUpdated is undefined
-  }
-
-  return updateFleet(fleetId, fleetWithNewVehicle);
+const addVehicleToFleet = (fleetId: number, vehicleId: number): Promise<{ error: boolean, message?: string }> => {
+  const fleetWithNewVehicle = associateVehicleToFleet(fleetId, vehicleId);
+  return fleetWithNewVehicle
 }
 
 // Find User by ID
-const findUserById = (userId: number): IUser | undefined => {
-  return findUserByIdRepository(userId);
+const findUserById = async (userId: number):  Promise<IUser | undefined> => {
+  return await findUserByIdRepository(userId);
 }
 
-const updateVehicleLocation = (vehicleId: number, location: { lat: number; lng: number }): IVehicle | undefined => {
-  const vehicleLocationUpdated = updateLocation(vehicleId, location);
+const updateVehicleLocation = (vehicleId: number, location: { lat: number; lng: number }):  Promise<{ error: boolean, message?: string }> => {
+  const vehicleLocationUpdated = updateVehicleLocationRepository(vehicleId, location);
 
-  if (vehicleLocationUpdated === undefined) {
-    return undefined; // Return undefined if vehicleLocationUpdated is undefined
-  }
+  return vehicleLocationUpdated
+}
 
-  return updateVehicle(vehicleId, vehicleLocationUpdated);
+const doesVehicleBelongToFleet = (fleetId: number, vehicleId: number): Promise<boolean> => {
+  const vehicleBelongsToFleet = doesVehicleBelongToFleetRepository(fleetId, vehicleId);
+  return vehicleBelongsToFleet;
 }
 
 const resetUsers = (): void => {
@@ -96,5 +96,6 @@ export {
   updateVehicleLocation,
   resetUsers,
   resetFleets,
-  resetVehicles
+  resetVehicles,
+  doesVehicleBelongToFleet
 };

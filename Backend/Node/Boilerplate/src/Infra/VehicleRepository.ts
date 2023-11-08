@@ -1,35 +1,100 @@
 // for this exercise I decided to register my vehicle here because it's usually repositories that manipulate the flush of data in a database
 import { IVehicle } from '../Domain/Entity/Vehicle/IVehicle';
+import connection from '../db/index'; // Import the connection from db.ts
 
-let vehicles: IVehicle[] = [];
 
-function saveVehicle(vehicle: IVehicle): IVehicle {
-  // Check if the vehicle with the same ID already exists
-  if (vehicles.some((v) => v.id === vehicle.id)) {
-    throw new Error(`Vehicle with ID ${vehicle.id} already exists.`);
-  }
+export const saveVehicle = (vehicle: IVehicle): Promise<IVehicle> => {
+  return new Promise((resolve, reject) => {
+    const sql = `INSERT INTO vehicles (numberPlate, lat, lng) VALUES (?, ?, ?)`;
+    connection.query(sql, [vehicle.numberPlate, vehicle.location.lat, vehicle.location.lng], (err, result) => {
+      if (err) {
+        reject(err);
+      } else {
+        const newVehicle = {
+          ...vehicle,
+          id: result.insertId, // This adds the newly generated ID to the fleet object
+        };
+        resolve(newVehicle);
+      }
+    });
+  });
+};
 
-  // If the ID doesn't exist, add the vehicle to the repository
-  vehicles.push(vehicle);
+export const findVehicleById = (vehicleId: number): Promise<IVehicle | undefined> => {
+  return new Promise((resolve, reject) => {
+    const sql = `SELECT * FROM vehicles WHERE id = ?`;
+    connection.query(sql, [vehicleId], (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results.length ? results[0] : undefined);
+      }
+    });
+  });
+};
 
-  return vehicle;
-}
+export const updateVehicleLocationRepository = (vehicleId: number, location: { lat: number, lng: number }): Promise<{ error: boolean, message?: string }> => {
+  return new Promise((resolve) => {
+    // First, check the current location of the vehicle
+    const checkSql = `SELECT lat, lng FROM vehicles WHERE id = ?`;
+    connection.query(checkSql, [vehicleId], (checkErr, checkResults) => {
+      if (checkErr) {
+        resolve({ error: true, message: checkErr.message });
+      } else if (checkResults.length > 0 && checkResults[0].lat === location.lat && checkResults[0].lng === location.lng) {
+        // If the locations are the same, resolve with a custom error message
+        resolve({ error: true, message: 'Vehicle already parked at this location' });
+      } else {
+        // If the locations are different, proceed with the update
+        const updateSql = `UPDATE vehicles SET lat = ?, lng = ? WHERE id = ?`;
+        connection.query(updateSql, [location.lat, location.lng, vehicleId], (updateErr) => {
+          if (updateErr) {
+            resolve({ error: true, message: updateErr.message });
+          } else {
+            resolve({ error: false });
+          }
+        });
+      }
+    });
+  });
+};
 
-function findVehicleById(vehicleId: number): IVehicle | undefined {
-  return vehicles.find((v) => v.id === vehicleId);
-}
+export const associateVehicleToFleet = (fleetId: number, vehicleId: number): Promise<{error: boolean, message: string}> => {
+  return new Promise((resolve) => {
+    // First check if the vehicle is already associated with the fleet
+    const checkSql = `SELECT 1 FROM fleet_vehicles WHERE fleetId = ? AND vehicleId = ?`;
+    connection.query(checkSql, [fleetId, vehicleId], (checkErr, checkResults) => {
+      if (checkErr) {
+        resolve({ error: true, message: checkErr.message });
+      } else if (checkResults.length > 0) {
+        // If the vehicle is already associated, return error true with a message
+        resolve({ error: true, message: `Vehicle with ID ${vehicleId} is already associated with fleet ID ${fleetId}.` });
+      } else {
+        // If not, proceed to insert the new association
+        const insertSql = `INSERT INTO fleet_vehicles (fleetId, vehicleId) VALUES (?, ?)`;
+        connection.query(insertSql, [fleetId, vehicleId], (insertErr) => {
+          if (insertErr) {
+            resolve({ error: true, message: insertErr.message });
+          } else {
+            resolve({ error: false, message: 'Vehicle associated with fleet successfully.' });
+          }
+        });
+      }
+    });
+  });
+};
 
-const updateVehicle = (vehicleId: number, newVehicle: IVehicle): IVehicle | undefined => {
-  const index = vehicles.findIndex((v) => v.id === vehicleId);
-  if (index !== -1) {
-    vehicles[index] = newVehicle;
-    return vehicles[index];
-  }
-  return undefined;
-}
 
-const deleteAllVehicles = () : void  => {
-  vehicles = []
-}
 
-export { saveVehicle, findVehicleById, updateVehicle, deleteAllVehicles};
+
+export const deleteAllVehicles = (): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    const sql = `DELETE FROM vehicles`;
+    connection.query(sql, (err, result) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
+};
