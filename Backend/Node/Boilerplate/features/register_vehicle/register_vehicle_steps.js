@@ -26,12 +26,12 @@ function generateID() {
   return result
 }
 
-Given('my fleet', async function () {
+Given('my registration fleet', async function () {
   if (myFleet) return
   myFleet = await createFleet('Fleet 1')
 })
 
-Given('a vehicle', async function () {
+Given('a registration vehicle', async function () {
   if (!myVehicle) {
     myVehicle = await createVehicle(generateID(), { lat: 48.8566, lng: 2.3522 })
   }
@@ -43,7 +43,7 @@ When('I register this vehicle into my fleet', async function () {
   isAssociated = true
 })
 
-Given('I have registered this vehicle into my fleet', async function () {
+Given('I have registered this registration vehicle into my fleet', async function () {
   // Attempt to associate the vehicle to the fleet only if it has not been done yet
   if (!isAssociated) {
     const result = await addVehicleToFleet(myFleet.id, myVehicle.id)
